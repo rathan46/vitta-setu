@@ -20,6 +20,8 @@ class AuthService:
     def authenticate(self, email, password):
         user = user_repo.get_by_email(email)
         if user and user.check_password(password):
+            if hasattr(user, 'account_status') and user.account_status == 'suspended':
+                return False, 'Your account has been suspended by an administrator.'
             user.last_login = datetime.utcnow()
             user_repo.update(user)
             return True, user

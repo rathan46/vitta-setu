@@ -7,21 +7,11 @@ services:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
-      - DATABASE_URL=postgresql://vitta:secret@db:5432/vitta_setu
+      - DATABASE_URL=sqlite:///data/vitta_setu.db
       - SECRET_KEY=your_production_secret_key
       - APP_DOMAIN=http://localhost
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_USER=vitta
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=vitta_setu
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - sqlite_data:/app/data
     restart: always
 
   nginx:
@@ -35,4 +25,4 @@ services:
     restart: always
 
 volumes:
-  postgres_data:
+  sqlite_data:

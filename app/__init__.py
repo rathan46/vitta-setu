@@ -31,6 +31,16 @@ def create_app(config_name='development'):
     app.register_blueprint(api_v1_bp, url_prefix='/api/v1')
     app.register_blueprint(monitoring_bp)
 
+    @app.route('/')
+    def root():
+        from flask import redirect, url_for
+        return redirect(url_for('dashboard.index'))
+
+    @app.route('/docs')
+    def docs_redirect():
+        from flask import redirect, url_for
+        return redirect(url_for('dashboard.docs'))
+
     return app
 
 @login_manager.user_loader

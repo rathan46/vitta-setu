@@ -23,6 +23,9 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         {% if current_user.is_authenticated %}
+            {% if current_user.is_admin %}
+                <li class="nav-item"><a class="nav-link text-warning fw-bold" href="{{ url_for('admin.index') }}">Admin Portal</a></li>
+            {% endif %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.transactions') }}">Transactions</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.api_keys') }}">API Keys</a></li>
