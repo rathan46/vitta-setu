@@ -1,5 +1,6 @@
 from app.repositories import user_repo
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 class AuthService:
     def register_merchant(self, email, password, merchant_name, owner_name, business_name):
@@ -11,10 +12,9 @@ class AuthService:
             email=email,
             merchant_name=merchant_name,
             owner_name=owner_name,
-            business_name=business_name
+            business_name=business_name,
+            password_hash=generate_password_hash(password)
         )
-        user.set_password(password)
-        user_repo.update(user)
         return True, user
 
     def authenticate(self, email, password):

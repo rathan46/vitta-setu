@@ -2,75 +2,84 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold">API Documentation</h2>
-    <a href="{{ url_for('dashboard.playground') }}" class="btn btn-outline-info">Go to Playground</a>
+    <h2 class="fw-bold">API Documentation (For Beginners!) 🚀</h2>
+    <a href="{{ url_for('dashboard.playground') }}" class="btn btn-outline-info">Try it in the Playground</a>
 </div>
 
 <div class="row">
     <div class="col-md-3">
         <div class="list-group list-group-flush bg-transparent sticky-top" style="top: 80px;">
-            <a href="#auth" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Authentication</a>
-            <a href="#create" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Create Payment</a>
-            <a href="#webhooks" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Webhooks</a>
+            <a href="#intro" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">1. What is this?</a>
+            <a href="#auth" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">2. The Secret Password</a>
+            <a href="#create" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">3. Creating a Payment</a>
+            <a href="#webhooks" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">4. Getting Notified</a>
         </div>
     </div>
     <div class="col-md-9">
+        
+        <div class="card-premium p-4 mb-4" id="intro">
+            <h4 class="fw-bold mb-3">1. What is this system? 🤔</h4>
+            <p class="text-secondary">Imagine you have a lemonade stand online. When someone wants to buy a glass of lemonade, they need a way to pay you. Vitta Setu is like a magical bridge between your lemonade stand and the customer's phone.</p>
+            <p class="text-secondary">You tell Vitta Setu: <em>"Hey, charge this person ₹50 for lemonade."</em> Vitta Setu creates a special payment webpage for them. Once they pay, Vitta Setu runs back to you and says: <em>"They paid!"</em> so you can give them the lemonade.</p>
+        </div>
+
         <div class="card-premium p-4 mb-4" id="auth">
-            <h4 class="fw-bold mb-3">Authentication</h4>
-            <p class="text-secondary">All API requests must be authenticated using your Public API Key in the Authorization header.</p>
+            <h4 class="fw-bold mb-3">2. The Secret Password 🗝️ (Authentication)</h4>
+            <p class="text-secondary">Before Vitta Setu talks to your lemonade stand, it needs to know it's really you. We use a secret password called an <strong>API Key</strong>. You must show this key every time you ask Vitta Setu to do something.</p>
+            <p class="text-secondary">You put this key in the <code>Authorization</code> header of your request, like putting a secret stamp on an envelope.</p>
             <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>Authorization: Bearer pk_test_your_public_key_here</code></pre>
         </div>
 
         <div class="card-premium p-4 mb-4" id="create">
-            <h4 class="fw-bold mb-3">Create Payment</h4>
-            <p class="text-secondary">Endpoint: <code class="text-info">POST /api/v1/create-payment</code></p>
-            <h6 class="fw-bold mt-4">Request Body (JSON)</h6>
+            <h4 class="fw-bold mb-3">3. Creating a Payment 💸</h4>
+            <p class="text-secondary">To make a payment page, you need to send a message (a <strong>POST Request</strong>) to this address: <code class="text-info">/api/v1/create-payment</code></p>
+            
+            <h6 class="fw-bold mt-4">What you need to send to us (The Request):</h6>
             <div class="table-responsive">
                 <table class="table table-dark table-sm table-borderless">
-                    <thead><tr class="text-secondary"><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <thead><tr class="text-secondary"><th>Name</th><th>Required?</th><th>What does it mean?</th></tr></thead>
                     <tbody>
-                        <tr><td>amount</td><td>Float</td><td>Yes</td><td>Amount in INR</td></tr>
-                        <tr><td>upi_address</td><td>String</td><td>Yes</td><td>Merchant's VPA receiving funds</td></tr>
-                        <tr><td>target_callback_url</td><td>String</td><td>Yes</td><td>Webhook URL for status updates</td></tr>
-                        <tr><td>return_url</td><td>String</td><td>Yes</td><td>URL to redirect customer after payment</td></tr>
-                        <tr><td>merchant_transaction_id</td><td>String</td><td>No</td><td>Idempotency key / Your order ID</td></tr>
+                        <tr><td><code>amount</code></td><td>Yes ✅</td><td>How much money? (e.g. 50.0)</td></tr>
+                        <tr><td><code>upi_address</code></td><td>Yes ✅</td><td>Where should the money go? (e.g. yourname@bank)</td></tr>
+                        <tr><td><code>target_callback_url</code></td><td>Yes ✅</td><td>The phone number (URL) we should call when they finish paying to tell you the result.</td></tr>
+                        <tr><td><code>return_url</code></td><td>Yes ✅</td><td>Where should we send the customer after they pay? (e.g. back to your lemonade stand website)</td></tr>
+                        <tr><td><code>merchant_transaction_id</code></td><td>No ❌</td><td>Your special receipt number to remember this order.</td></tr>
                     </tbody>
                 </table>
             </div>
             
-            <h6 class="fw-bold mt-4">Response</h6>
+            <h6 class="fw-bold mt-4">What we will send back to you (The Response):</h6>
+            <p class="text-secondary">We will give you a magical link (<code>payment_url</code>). You just send your customer to this link so they can pay!</p>
             <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>{
   "status": "success",
   "session_id": "uuid-v4",
-  "temporary_token": "token123",
   "payment_url": "https://vittasetu.com/payment/token123",
   "expiry_time": "2023-10-01T12:00:00Z"
 }</code></pre>
         </div>
 
         <div class="card-premium p-4" id="webhooks">
-            <h4 class="fw-bold mb-3">Webhooks & HMAC Signatures</h4>
-            <p class="text-secondary">When a payment completes, fails, or requires manual verification (UNKNOWN), we send a POST request to your <code>target_callback_url</code>.</p>
+            <h4 class="fw-bold mb-3">4. Getting Notified 📬 (Webhooks)</h4>
+            <p class="text-secondary">Remember the <code>target_callback_url</code> you gave us earlier? When the customer finishes paying, our system will automatically "call" that URL to tell your server what happened (Success, Failed, or Unknown). This is called a <strong>Webhook</strong>.</p>
             
-            <h6 class="fw-bold mt-4">Headers</h6>
-            <ul class="text-secondary">
-                <li><code>X-VS-Signature</code>: HMAC SHA256 signature</li>
-                <li><code>X-VS-Timestamp</code>: Unix timestamp of the request</li>
-                <li><code>X-VS-Transaction</code>: Vitta Setu Transaction ID</li>
-            </ul>
-
-            <h6 class="fw-bold mt-4">Verifying Signatures (Python Example)</h6>
+            <p class="text-secondary">But wait! How do you know the call is really from Vitta Setu and not a bad guy pretending to be us? We use a super-secret mathematical signature called <strong>HMAC</strong>.</p>
+            
+            <h6 class="fw-bold mt-4">Checking the Signature (Python Example)</h6>
+            <p class="text-secondary">You look at the secret <code>X-VS-Signature</code> we send, and do some math to see if it matches your secret key. Here is how you do it in Python:</p>
             <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>import hmac, hashlib, json
 
 def verify_webhook(secret, payload_dict, timestamp, received_signature):
-    # payload_dict must be serialized with no spaces between separators
+    # We turn the message into a tight string
     message = f"{timestamp}.{json.dumps(payload_dict, separators=(',', ':'))}"
+    
+    # We calculate our own signature using our secret key
     expected_signature = hmac.new(
         secret.encode('utf-8'),
         message.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
     
+    # If they match, it's really from Vitta Setu!
     return hmac.compare_digest(expected_signature, received_signature)</code></pre>
         </div>
     </div>

@@ -7,11 +7,9 @@ services:
       - "5000:5000"
     environment:
       - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///data/vitta_setu.db
       - SECRET_KEY=your_production_secret_key
       - APP_DOMAIN=http://localhost
-    volumes:
-      - sqlite_data:/app/data
+    # The database will now be stored internally inside the container at /app/vitta_setu.db
     restart: always
 
   nginx:
@@ -24,5 +22,4 @@ services:
       - web
     restart: always
 
-volumes:
-  sqlite_data:
+

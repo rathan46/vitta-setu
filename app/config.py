@@ -1,8 +1,10 @@
 import os
 
+basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'default-dev-key')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///vitta_setu.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'vitta_setu.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session config
