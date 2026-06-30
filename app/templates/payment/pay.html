@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="{{ merchant.payment_page_theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay {{ merchant.business_name }} via UPI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: {{ merchant.primary_color }};
+            --accent: {{ merchant.accent_color }};
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: {% if merchant.payment_page_theme == 'light' %}#f8fafc{% else %}radial-gradient(circle at top right, #1e1b4b, #0f172a){% endif %};
+            color: {% if merchant.payment_page_theme == 'light' %}#0f172a{% else %}#f8fafc{% endif %};
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pay-card {
+            background: {% if merchant.payment_page_theme == 'light' %}#ffffff{% else %}rgba(30, 41, 59, 0.7){% endif %};
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(128,128,128,0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+            position: relative;
+        }
+        .btn-pay {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .btn-pay:hover {
+            transform: scale(1.02);
+            color: white;
+        }
+        .qr-container img {
+            border-radius: 1rem;
+            border: 4px solid var(--primary);
+            padding: 10px;
+            background: white;
+        }
+        
+        /* Premium Countdown */
+        .timer-container { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+        .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .timer-circle-bg { fill: none; stroke: rgba(128,128,128,0.2); stroke-width: 6; }
+        .timer-circle { fill: none; stroke: var(--accent); stroke-width: 6; stroke-dasharray: 283; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 1s linear; }
+        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        
+        .pulse-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(16, 185, 129, 0.1);
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            display: none;
+        }
+        @keyframes pulse { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="pay-card p-4 text-center">
+    <div class="pulse-overlay" id="successPulse"></div>
+    
+    {% if merchant.logo_url %}
+        <img src="{{ merchant.logo_url }}" alt="{{ merchant.business_name }}" class="mb-3" style="max-height: 50px;">
+    {% else %}
+        <h4 class="fw-bold mb-3" style="color: var(--primary)">{{ merchant.business_name }}</h4>
+    {% endif %}
+    
+    <div class="text-secondary mb-4">Requesting Payment</div>
+    <h1 class="display-4 fw-bold mb-4">₹{{ session.amount }}</h1>
+    
+    <div id="state-waiting">
+        <div class="timer-container mb-4">
+            <svg class="timer-svg" viewBox="0 0 100 100">
+                <circle class="timer-circle-bg" cx="50" cy="50" r="45"></circle>
+                <circle class="timer-circle" id="timerPath" cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="timer-text" id="timerLabel">10:00</div>
+        </div>
+
+        {% if is_mobile %}
+            <a href="{{ upi_intent_url }}" id="btnPayMobile" class="btn btn-pay w-100 py-3 mb-3 fs-5 shadow-sm" target="_blank">Pay with UPI App</a>
+            <p class="small text-secondary mt-3">Select your preferred UPI app securely.</p>
+        {% else %}
+            <div class="qr-container mb-3">
+                <img src="{{ qr_data }}" alt="UPI QR Code" class="img-fluid" width="200">
+            </div>
+            <p class="small text-secondary">Scan this QR Code with your phone's camera or any UPI app to pay.</p>
+        {% endif %}
+    </div>
+
+    <div id="state-success" style="display: none;" class="py-5">
+        <div class="mb-3 text-success">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h4 class="fw-bold text-success mb-2">Payment Successful</h4>
+        <p class="text-secondary small">Redirecting to merchant...</p>
+    </div>
+
+    <div class="mt-4 pt-3 border-top border-secondary small text-secondary">
+        Secured by <strong>Vitta Setu</strong>
+    </div>
+</div>
+
+<script>
+    const expiryTime = new Date("{{ session.expiry_time.isoformat() }}Z").getTime();
+    const token = "{{ session.temporary_token }}";
+    
+    // Timer Logic
+    const timerLabel = document.getElementById('timerLabel');
+    const timerPath = document.getElementById('timerPath');
+    const totalTime = 10 * 60 * 1000;
+    
+    function updateTimer() {
+        const now = new Date().getTime();
+        const distance = expiryTime - now;
+        
+        if (distance < 0) {
+            window.location.reload();
+            return;
+        }
+        
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        timerLabel.innerText = minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+        
+        const fraction = distance / totalTime;
+        timerPath.style.strokeDashoffset = 283 - (fraction * 283);
+        
+        if (fraction < 0.2) timerPath.style.stroke = '#ef4444'; // Red
+        else if (fraction < 0.5) timerPath.style.stroke = '#f59e0b'; // Orange
+    }
+    
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Desktop SSE Synchronization
+    const sseUrl = `/payment/stream/${token}`;
+    const evtSource = new EventSource(sseUrl);
+    
+    evtSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.is_final) {
+            evtSource.close();
+            if (data.state === 'SUCCESS') {
+                document.getElementById('state-waiting').style.display = 'none';
+                document.getElementById('state-success').style.display = 'block';
+                document.getElementById('successPulse').style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = data.return_url;
+                }, 2000);
+            } else {
+                window.location.reload();
+            }
+        }
+    };
+    
+    {% if is_mobile %}
+    // Simulating frontend response handling when user returns from UPI app
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === 'visible') {
+            // Check status via API or prompt user if unknown.
+            // For this implementation, we rely on the SSE event or polling backend.
+            // If the app intent returns a URL scheme, we would intercept it.
+        }
+    });
+    
+    // Demo Mock: Send a mock success if they click the intent (since we can't actually open UPI in this demo env)
+    document.getElementById('btnPayMobile').addEventListener('click', (e) => {
+        // e.preventDefault();
+        // In real app, intent is launched.
+        // We will trigger a mock response to the server to simulate UPI returning SUCCESS.
+        setTimeout(() => {
+            fetch(`/payment/${token}/response`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'SUCCESS', utr_number: 'UTR' + Math.floor(Math.random()*1000000000)})
+            });
+        }, 5000);
+    });
+    {% endif %}
+</script>
+
+</body>
+</html>

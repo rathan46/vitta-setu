@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">API Documentation</h2>
+    <a href="{{ url_for('dashboard.playground') }}" class="btn btn-outline-info">Go to Playground</a>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="list-group list-group-flush bg-transparent sticky-top" style="top: 80px;">
+            <a href="#auth" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Authentication</a>
+            <a href="#create" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Create Payment</a>
+            <a href="#webhooks" class="list-group-item list-group-item-action bg-transparent text-light border-secondary">Webhooks</a>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="card-premium p-4 mb-4" id="auth">
+            <h4 class="fw-bold mb-3">Authentication</h4>
+            <p class="text-secondary">All API requests must be authenticated using your Public API Key in the Authorization header.</p>
+            <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>Authorization: Bearer pk_test_your_public_key_here</code></pre>
+        </div>
+
+        <div class="card-premium p-4 mb-4" id="create">
+            <h4 class="fw-bold mb-3">Create Payment</h4>
+            <p class="text-secondary">Endpoint: <code class="text-info">POST /api/v1/create-payment</code></p>
+            <h6 class="fw-bold mt-4">Request Body (JSON)</h6>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm table-borderless">
+                    <thead><tr class="text-secondary"><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>amount</td><td>Float</td><td>Yes</td><td>Amount in INR</td></tr>
+                        <tr><td>upi_address</td><td>String</td><td>Yes</td><td>Merchant's VPA receiving funds</td></tr>
+                        <tr><td>target_callback_url</td><td>String</td><td>Yes</td><td>Webhook URL for status updates</td></tr>
+                        <tr><td>return_url</td><td>String</td><td>Yes</td><td>URL to redirect customer after payment</td></tr>
+                        <tr><td>merchant_transaction_id</td><td>String</td><td>No</td><td>Idempotency key / Your order ID</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h6 class="fw-bold mt-4">Response</h6>
+            <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>{
+  "status": "success",
+  "session_id": "uuid-v4",
+  "temporary_token": "token123",
+  "payment_url": "https://vittasetu.com/payment/token123",
+  "expiry_time": "2023-10-01T12:00:00Z"
+}</code></pre>
+        </div>
+
+        <div class="card-premium p-4" id="webhooks">
+            <h4 class="fw-bold mb-3">Webhooks & HMAC Signatures</h4>
+            <p class="text-secondary">When a payment completes, fails, or requires manual verification (UNKNOWN), we send a POST request to your <code>target_callback_url</code>.</p>
+            
+            <h6 class="fw-bold mt-4">Headers</h6>
+            <ul class="text-secondary">
+                <li><code>X-VS-Signature</code>: HMAC SHA256 signature</li>
+                <li><code>X-VS-Timestamp</code>: Unix timestamp of the request</li>
+                <li><code>X-VS-Transaction</code>: Vitta Setu Transaction ID</li>
+            </ul>
+
+            <h6 class="fw-bold mt-4">Verifying Signatures (Python Example)</h6>
+            <pre class="bg-dark p-3 rounded border border-secondary text-light"><code>import hmac, hashlib, json
+
+def verify_webhook(secret, payload_dict, timestamp, received_signature):
+    # payload_dict must be serialized with no spaces between separators
+    message = f"{timestamp}.{json.dumps(payload_dict, separators=(',', ':'))}"
+    expected_signature = hmac.new(
+        secret.encode('utf-8'),
+        message.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(expected_signature, received_signature)</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

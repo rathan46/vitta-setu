@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card-premium p-4">
+            <h3 class="text-center fw-bold mb-4">Merchant Registration</h3>
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-secondary">Owner Name</label>
+                        <input type="text" name="owner_name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-secondary">Business Name</label>
+                        <input type="text" name="business_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary">Merchant/Brand Name</label>
+                    <input type="text" name="merchant_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary">Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary">Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary-gradient w-100 py-2">Create Account</button>
+            </form>
+            <div class="text-center mt-4">
+                <p class="text-secondary">Already have an account? <a href="{{ url_for('auth.login') }}" class="text-info text-decoration-none">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

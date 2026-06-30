@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">API Playground</h2>
+    <a href="{{ url_for('dashboard.docs') }}" class="btn btn-outline-secondary">View Full Docs</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card-premium p-4 h-100">
+            <h5 class="fw-bold mb-4">Test Request (POST /api/v1/create-payment)</h5>
+            <form id="playgroundForm">
+                <div class="mb-3">
+                    <label class="form-label text-secondary small">API Key (Bearer Token)</label>
+                    <input type="text" id="pg_api_key" class="form-control font-monospace text-info" value="{{ active_key.public_key if active_key else 'NO_ACTIVE_KEY' }}" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small">Amount</label>
+                    <input type="number" id="pg_amount" class="form-control" value="100.00" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small">UPI Address</label>
+                    <input type="text" id="pg_upi" class="form-control" value="merchant@upi">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small">Callback URL</label>
+                    <input type="url" id="pg_callback" class="form-control" value="https://webhook.site/test">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary small">Return URL</label>
+                    <input type="url" id="pg_return" class="form-control" value="http://localhost:5000/dashboard/transactions">
+                </div>
+                <button type="button" id="btnTest" class="btn btn-primary-gradient w-100 py-2">Execute Request</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-premium p-4 h-100 d-flex flex-column">
+            <h5 class="fw-bold mb-4">Response</h5>
+            <div class="flex-grow-1 position-relative">
+                <pre id="pg_response" class="bg-dark p-3 rounded border border-secondary text-light h-100 m-0" style="min-height: 200px; overflow-y: auto;">Waiting for request...</pre>
+                
+                <div id="pg_loading" class="position-absolute top-50 left-50 translate-middle" style="display: none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div id="pg_action" class="mt-3" style="display: none;">
+                <a href="#" id="btnOpenPayment" target="_blank" class="btn btn-success w-100">Open Payment Page</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-premium p-4 mt-5">
+    <h5 class="fw-bold mb-4">Code Examples</h5>
+    <ul class="nav nav-pills mb-3 border-bottom border-secondary pb-3" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#curl">cURL</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#python">Python</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#php">PHP</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#node">Node.js</button></li>
+    </ul>
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="curl">
+        <pre class="bg-dark p-3 rounded text-light"><code>curl -X POST http://localhost:5000/api/v1/create-payment \
+  -H "Authorization: Bearer {{ active_key.public_key if active_key else 'YOUR_KEY' }}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100.00,
+    "upi_address": "merchant@upi",
+    "target_callback_url": "https://webhook.site/test",
+    "return_url": "http://localhost:5000/dashboard"
+  }'</code></pre>
+      </div>
+      <div class="tab-pane fade" id="python">
+        <pre class="bg-dark p-3 rounded text-light"><code>import requests
+
+url = "http://localhost:5000/api/v1/create-payment"
+headers = {
+    "Authorization": "Bearer {{ active_key.public_key if active_key else 'YOUR_KEY' }}",
+    "Content-Type": "application/json"
+}
+data = {
+    "amount": 100.00,
+    "upi_address": "merchant@upi",
+    "target_callback_url": "https://webhook.site/test",
+    "return_url": "http://localhost:5000/dashboard"
+}
+
+response = requests.post(url, json=data, headers=headers)
+print(response.json())</code></pre>
+      </div>
+      <div class="tab-pane fade" id="php">
+        <pre class="bg-dark p-3 rounded text-light"><code>&lt;?php
+$ch = curl_init('http://localhost:5000/api/v1/create-payment');
+$payload = json_encode([
+    'amount' => 100.00,
+    'upi_address' => 'merchant@upi',
+    'target_callback_url' => 'https://webhook.site/test',
+    'return_url' => 'http://localhost:5000/dashboard'
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer {{ active_key.public_key if active_key else "YOUR_KEY" }}',
+    'Content-Type: application/json'
+]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?&gt;</code></pre>
+      </div>
+      <div class="tab-pane fade" id="node">
+        <pre class="bg-dark p-3 rounded text-light"><code>const axios = require('axios');
+
+axios.post('http://localhost:5000/api/v1/create-payment', {
+  amount: 100.00,
+  upi_address: 'merchant@upi',
+  target_callback_url: 'https://webhook.site/test',
+  return_url: 'http://localhost:5000/dashboard'
+}, {
+  headers: {
+    'Authorization': 'Bearer {{ active_key.public_key if active_key else "YOUR_KEY" }}'
+  }
+}).then(res => console.log(res.data)).catch(err => console.error(err));</code></pre>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('btnTest').addEventListener('click', async () => {
+    const btn = document.getElementById('btnTest');
+    const out = document.getElementById('pg_response');
+    const loader = document.getElementById('pg_loading');
+    const actionDiv = document.getElementById('pg_action');
+    const openBtn = document.getElementById('btnOpenPayment');
+    
+    const key = document.getElementById('pg_api_key').value;
+    if (key === 'NO_ACTIVE_KEY') {
+        alert('Generate an API Key first.');
+        return;
+    }
+    
+    const payload = {
+        amount: parseFloat(document.getElementById('pg_amount').value),
+        upi_address: document.getElementById('pg_upi').value,
+        target_callback_url: document.getElementById('pg_callback').value,
+        return_url: document.getElementById('pg_return').value
+    };
+    
+    btn.disabled = true;
+    loader.style.display = 'block';
+    out.innerText = '';
+    actionDiv.style.display = 'none';
+    
+    try {
+        const res = await fetch('/api/v1/create-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await res.json();
+        out.innerText = JSON.stringify(data, null, 2);
+        
+        if (res.ok && data.payment_url) {
+            openBtn.href = data.payment_url;
+            actionDiv.style.display = 'block';
+        }
+    } catch (e) {
+        out.innerText = "Error executing request: " + e.message;
+    } finally {
+        btn.disabled = false;
+        loader.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

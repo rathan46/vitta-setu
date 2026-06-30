@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Settings & Branding</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card-premium p-4">
+            <form method="POST">
+                <h5 class="fw-bold mb-4 border-bottom border-secondary pb-3">Business Information</h5>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small">Business Name</label>
+                    <input type="text" name="business_name" class="form-control" value="{{ current_user.business_name }}" required>
+                </div>
+                
+                <h5 class="fw-bold mb-4 mt-5 border-bottom border-secondary pb-3">Payment Page Branding</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-secondary small">Primary Color</label>
+                        <input type="color" name="primary_color" class="form-control form-control-color w-100 bg-transparent border-secondary" value="{{ current_user.primary_color }}" title="Choose your primary color">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-secondary small">Accent Color</label>
+                        <input type="color" name="accent_color" class="form-control form-control-color w-100 bg-transparent border-secondary" value="{{ current_user.accent_color }}" title="Choose your accent color">
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-secondary small">Payment Page Theme</label>
+                    <select name="payment_page_theme" class="form-select">
+                        <option value="dark" {% if current_user.payment_page_theme == 'dark' %}selected{% endif %}>Dark (Glassmorphism)</option>
+                        <option value="light" {% if current_user.payment_page_theme == 'light' %}selected{% endif %}>Light (Modern Clean)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-gradient px-5">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

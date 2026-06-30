@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('dashboard.transactions') }}" class="text-info text-decoration-none">&larr; Back to Transactions</a>
+</div>
+
+<h3 class="fw-bold mb-4">Transaction Details</h3>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card-premium p-4 mb-4">
+            <h5 class="fw-bold mb-4 border-bottom border-secondary pb-3">Payment Timeline</h5>
+            <div class="timeline ps-3 border-start border-info border-2 position-relative">
+                <div class="mb-3 position-relative">
+                    <div class="position-absolute bg-info rounded-circle" style="width: 12px; height: 12px; left: -22px; top: 4px;"></div>
+                    <div class="fw-bold">Payment Created</div>
+                    <div class="text-secondary small">{{ transaction.created_time.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                </div>
+                
+                {% if transaction.payment_time %}
+                <div class="mb-3 position-relative">
+                    <div class="position-absolute bg-success rounded-circle" style="width: 12px; height: 12px; left: -22px; top: 4px;"></div>
+                    <div class="fw-bold">Payment Processed ({{ transaction.payment_status }})</div>
+                    <div class="text-secondary small">{{ transaction.payment_time.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                </div>
+                {% endif %}
+
+                {% if transaction.callback_status %}
+                <div class="mb-3 position-relative">
+                    <div class="position-absolute {% if transaction.callback_status == 'SUCCESS' %}bg-success{% else %}bg-danger{% endif %} rounded-circle" style="width: 12px; height: 12px; left: -22px; top: 4px;"></div>
+                    <div class="fw-bold">Callback Delivered ({{ transaction.callback_status }})</div>
+                    <div class="text-secondary small">Attempts: {{ transaction.callback_logs | length }}</div>
+                </div>
+                {% endif %}
+                
+                {% if transaction.completion_time %}
+                <div class="mb-0 position-relative">
+                    <div class="position-absolute bg-primary rounded-circle" style="width: 12px; height: 12px; left: -22px; top: 4px;"></div>
+                    <div class="fw-bold">Transaction Completed</div>
+                    <div class="text-secondary small">{{ transaction.completion_time.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-premium p-4">
+            <h5 class="fw-bold mb-4 border-bottom border-secondary pb-3">Webhook Delivery Logs</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th>Attempt</th>
+                            <th>Time</th>
+                            <th>Status Code</th>
+                            <th>Response</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in transaction.callback_logs %}
+                        <tr>
+                            <td>{{ log.retry_count + 1 }}</td>
+                            <td>{{ log.delivery_time.strftime('%H:%M:%S') if log.delivery_time else 'Pending' }}</td>
+                            <td>{{ log.response_code or '-' }}</td>
+                            <td><span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ log.response_body }}">{{ log.response_body or '-' }}</span></td>
+                            <td>
+                                {% if log.final_status == 'SUCCESS' %}
+                                    <span class="text-success"><i class="bi bi-check-circle"></i> Success</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="bi bi-x-circle"></i> Failed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-secondary">No callbacks attempted yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-premium p-4">
+            <h5 class="fw-bold mb-4 border-bottom border-secondary pb-3">Information</h5>
+            
+            <h6 class="text-secondary small mb-1">Transaction ID</h6>
+            <p class="font-monospace text-break small mb-3">{{ transaction.id }}</p>
+            
+            <h6 class="text-secondary small mb-1">Merchant Reference</h6>
+            <p class="font-monospace text-break small mb-3">{{ transaction.merchant_transaction_id or 'N/A' }}</p>
+            
+            <h6 class="text-secondary small mb-1">Amount</h6>
+            <p class="fw-bold mb-3">₹{{ transaction.amount }} {{ transaction.currency }}</p>
+
+            <h6 class="text-secondary small mb-1">Status</h6>
+            <p class="mb-3">
+                <span class="badge {% if transaction.payment_status == 'SUCCESS' %}bg-success{% elif transaction.payment_status == 'FAILED' %}bg-danger{% else %}bg-warning{% endif %}">
+                    {{ transaction.payment_status }}
+                </span>
+            </p>
+
+            <h6 class="text-secondary small mb-1">UTR Number</h6>
+            <p class="font-monospace mb-3">{{ transaction.utr_number or 'Not provided' }}</p>
+
+            <h6 class="text-secondary small mb-1">Customer / Device</h6>
+            <p class="small mb-3">
+                {{ transaction.customer_email or 'Anonymous' }} <br>
+                <span class="text-secondary">{{ transaction.customer_device }} | {{ transaction.browser }} | {{ transaction.ip_address }}</span>
+            </p>
+            
+            <h6 class="text-secondary small mb-1">Callback URL</h6>
+            <p class="small text-break text-secondary mb-3">{{ transaction.callback_url }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
